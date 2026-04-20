@@ -1,0 +1,12 @@
+spring:
+  application:
+    name: INVENTORY-SERVICE
+
+  config:
+    import: "optional:configserver:"
+
+  cloud:
+    config:
+      discovery:
+        enabled: true
+        service-id: CONFIG-SERVER
