@@ -56,7 +56,7 @@ public class AddressController {
     @GetMapping("/{addressId}")
     public ResponseEntity<ApiResponse<AddressResponse>> getAddressesById(
             @RequestHeader("X-User-Id") UUID userId,
-            @PathVariable UUID addressId
+            @PathVariable("addressId") UUID addressId
     ) {
         return ResponseEntity.ok(
                 ApiResponse.success(
@@ -69,7 +69,7 @@ public class AddressController {
     @PatchMapping("/{addressId}/default")
     public ResponseEntity<ApiResponse<Void>> setDefaultAddress(
             @RequestHeader("X-User-Id") UUID userId,
-            @PathVariable UUID addressId
+            @PathVariable("addressId") UUID addressId
     ) {
         addressService.setDefaultAddress(userId, addressId);
         return ResponseEntity.ok(
@@ -80,7 +80,7 @@ public class AddressController {
     @DeleteMapping("/{addressId}")
     public ResponseEntity<ApiResponse<Void>> deleteAddress(
             @RequestHeader("X-User-Id") UUID userId,
-            @PathVariable UUID addressId
+            @PathVariable("addressId") UUID addressId
     ) {
         addressService.deleteAddress(userId, addressId);
         return ResponseEntity.ok(ApiResponse.success("Address deleted successfully", null));

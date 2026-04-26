@@ -41,9 +41,16 @@ public class ProductSearchServiceImpl implements ProductSearchService {
     @Override
     public List<ProductDocument> getTop100ProductsOrderByPriceDesc() {
         log.info("Fetching top 100 products by price");
-        List<ProductDocument> products = productSearchRepository.findTop100ByOrderByPriceDesc();
-        log.info("Fetched {} products", products.size());
-        return products;
+        try {
+            List<ProductDocument> products = productSearchRepository.findTop100ByOrderByPriceDesc();
+            log.info("Fetched {} products", products.size());
+            return products;
+        }
+        catch (Exception e) {
+            log.error("ES error", e);
+            throw e;
+        }
+
     }
 
     @Override

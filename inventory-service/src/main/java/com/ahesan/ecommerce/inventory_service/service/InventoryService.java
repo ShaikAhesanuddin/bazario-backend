@@ -16,4 +16,6 @@ public interface InventoryService {
     ProductResponse reduceStock(String skuCode, Integer quantity);
 
     ProductResponse addStock(String skuCode, Integer quantity);
+
+    void reindexAllProducts();
 }

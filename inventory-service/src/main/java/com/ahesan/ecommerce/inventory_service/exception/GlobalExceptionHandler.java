@@ -132,7 +132,8 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiResponse.error(
                         "Something went wrong. Please try again later.",
-                        buildError(ErrorType.SYSTEM, "Internal server error")
+                        buildError(ErrorType.SYSTEM, ex.getMessage())
                 ));
     }
+
 }

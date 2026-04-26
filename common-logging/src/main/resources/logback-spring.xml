@@ -29,52 +29,58 @@
         </encoder>
     </appender>
 
-    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>/Users/ahesan/logs/${service}.log</file>
+<!--    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">-->
+<!--        <file>/Users/ahesan/logs/${service}.log</file>-->
 
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>logs/${service}.%d{yyyy-MM-dd}.log</fileNamePattern>
-            <maxHistory>7</maxHistory>
-        </rollingPolicy>
+<!--        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">-->
+<!--            <fileNamePattern>logs/${service}.%d{yyyy-MM-dd}.log</fileNamePattern>-->
+<!--            <maxHistory>7</maxHistory>-->
+<!--        </rollingPolicy>-->
 
-        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
-            <providers>
-                <timestamp/>
-                <logLevel/>
-                <pattern>
-                    <pattern>
-                        {"service":"${service:-unknown-service}"}
-                    </pattern>
-                </pattern>
-                <mdc>
-                    <includeMdcKeyName>traceId</includeMdcKeyName>
-                    <includeMdcKeyName>spanId</includeMdcKeyName>
-                    <includeMdcKeyName>correlationId</includeMdcKeyName>
-                </mdc>
-                <message/>
-            </providers>
-        </encoder>
-    </appender>
+<!--        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">-->
+<!--            <providers>-->
+<!--                <timestamp/>-->
+<!--                <logLevel/>-->
+<!--                <pattern>-->
+<!--                    <pattern>-->
+<!--                        {"service":"${service:-unknown-service}"}-->
+<!--                    </pattern>-->
+<!--                </pattern>-->
+<!--                <mdc>-->
+<!--                    <includeMdcKeyName>traceId</includeMdcKeyName>-->
+<!--                    <includeMdcKeyName>spanId</includeMdcKeyName>-->
+<!--                    <includeMdcKeyName>correlationId</includeMdcKeyName>-->
+<!--                </mdc>-->
+<!--                <message/>-->
+<!--            </providers>-->
+<!--        </encoder>-->
+<!--    </appender>-->
 
     <appender name="LOGSTASH"
               class="net.logstash.logback.appender.LogstashTcpSocketAppender">
 
-        <destination>localhost:5044</destination>
+        <destination>${LOGSTASH_HOST:-localhost}:5044</destination>
+
+        <keepAliveDuration>5 minutes</keepAliveDuration>
+        <reconnectionDelay>10000</reconnectionDelay>
 
         <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
             <providers>
                 <timestamp/>
                 <logLevel/>
+
                 <pattern>
                     <pattern>
                         {"service":"${service:-unknown-service}"}
                     </pattern>
                 </pattern>
+
                 <mdc>
                     <includeMdcKeyName>traceId</includeMdcKeyName>
                     <includeMdcKeyName>spanId</includeMdcKeyName>
                     <includeMdcKeyName>correlationId</includeMdcKeyName>
                 </mdc>
+
                 <message/>
             </providers>
         </encoder>
@@ -83,7 +89,6 @@
 
     <root level="INFO">
         <appender-ref ref="JSON"/>
-        <appender-ref ref="FILE"/>
         <appender-ref ref="LOGSTASH"/>
     </root>
 

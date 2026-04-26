@@ -51,7 +51,7 @@ public class InventoryController {
 
     @GetMapping("/{skuCode}")
     public ResponseEntity<ApiResponse<ProductResponse>> getStock(
-            @PathVariable String skuCode
+            @PathVariable("skuCode") String skuCode
     ) {
         ProductResponse response = service.getStock(skuCode);
 
@@ -85,6 +85,12 @@ public class InventoryController {
                 .body(
                         ApiResponse.success("Stock added successfully", response)
                 );
+    }
+
+    @PostMapping("/reindex")
+    public ResponseEntity<ApiResponse<Void>> reindex() {
+        service.reindexAllProducts();
+        return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.success("Reindexing completed", null));
     }
 
 }

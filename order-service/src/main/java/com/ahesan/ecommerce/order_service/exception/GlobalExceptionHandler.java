@@ -167,7 +167,7 @@ public class GlobalExceptionHandler {
                 HttpStatus.SERVICE_UNAVAILABLE,
                 "Unable to process order at the moment. Please try again later.",
                 ErrorType.EXTERNAL,
-                "Inventory service failure"
+                ex.getMessage()
         );
     }
 
@@ -189,12 +189,13 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Object>> handleGeneric(Exception ex) {
 
         log.error("Unexpected error occurred", ex);
+        ex.printStackTrace();
 
         return buildResponse(
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 "Something went wrong. Please try again later.",
                 ErrorType.SYSTEM,
-                "Internal server error"
+                ex.getMessage()
         );
     }
 }

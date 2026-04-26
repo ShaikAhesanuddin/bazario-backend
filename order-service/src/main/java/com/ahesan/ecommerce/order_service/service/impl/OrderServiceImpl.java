@@ -18,6 +18,7 @@ import com.ahesan.ecommerce.order_service.mapper.OrderMapper;
 import com.ahesan.ecommerce.order_service.repository.OrderRepository;
 import com.ahesan.ecommerce.order_service.response.ApiResponse;
 import com.ahesan.ecommerce.order_service.service.OrderService;
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import jakarta.transaction.Transactional;
@@ -235,8 +236,26 @@ public class OrderServiceImpl implements OrderService {
             throw (InventoryServiceException) root;
         }
 
+
+        if (root instanceof CallNotPermittedException) {
+            log.info("Circuit breaker OPEN");
+            throw new InventoryServiceException(
+                    "Inventory service is temporarily unavailable, CIRCUIT BREAKER OPEN"
+            );
+        }
+
+        if (root instanceof feign.RetryableException) {
+            log.info("Inventory service unavailable");
+            throw new InventoryServiceException(
+                    "Inventory service is down or unavailable"
+            );
+        }
         if (root.getMessage() != null &&
-                root.getMessage().contains("Load balancer does not contain an instance")) {
+                (
+                        root.getMessage().contains("Load balancer does not contain an instance") ||
+                                root.getMessage().toLowerCase().contains("connection refused")
+                )
+        ) {
 
             log.info("Inventory service unavailable");
 

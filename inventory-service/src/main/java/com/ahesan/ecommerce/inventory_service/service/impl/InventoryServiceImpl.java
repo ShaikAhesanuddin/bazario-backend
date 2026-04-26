@@ -122,6 +122,20 @@ public class InventoryServiceImpl implements InventoryService {
         return productMapper.toDto(updatedProduct);
     }
 
+    @Override
+    public void reindexAllProducts() {
+
+        log.info("Starting full reindex...");
+
+        List<Product> products = productRepository.findAll();
+
+        for (Product product : products) {
+            indexProduct(product);
+        }
+
+        log.info("Reindex completed. Total: {}", products.size());
+    }
+
     private void indexProduct(Product product) {
         try {
             ProductDocument doc = productSearchMapper.toDocument(product);

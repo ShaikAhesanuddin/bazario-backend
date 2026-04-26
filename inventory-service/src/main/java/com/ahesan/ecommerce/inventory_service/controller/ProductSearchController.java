@@ -32,9 +32,10 @@ public class ProductSearchController {
     @GetMapping
     public ResponseEntity<ApiResponse<List<ProductDocument>>> search(
 
-            @RequestParam(required = false) String query
+            @RequestParam(name = "query", required = false) String query
     ) {
 
+        log.info("Searching products for query: {}", query);
         List<ProductDocument> products;
         if (query == null || query.trim().isEmpty()) {
             products = service.getTop100ProductsOrderByPriceDesc();
@@ -58,7 +59,9 @@ public class ProductSearchController {
 
 
     @GetMapping("/{productId}")
-    public ResponseEntity<ApiResponse<ProductResponse>> getProductById(@PathVariable(required = true) UUID productId) {
+    public ResponseEntity<ApiResponse<ProductResponse>> getProductById(
+            @PathVariable("productId") UUID productId
+    ) {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(
                         ApiResponse.success(
