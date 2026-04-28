@@ -4,12 +4,7 @@ networks:
   bazario-net:
 
 volumes:
-  mysql_users_data:
-  mysql_inventory_data:
-  mysql_orders_data:
-  mysql_auth_data:
   elasticsearch_data:
-
 
 x-common-env: &common-env
   SPRING_PROFILES_ACTIVE: prod
@@ -18,98 +13,21 @@ x-common-env: &common-env
 
 services:
 
-
-
-  mysql-users:
-    image: mysql:8.0
-    container_name: mysql-users
-    environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: user_db
-    ports:
-      - "3307:3306"
-    volumes:
-      - mysql_users_data:/var/lib/mysql
-    networks:
-      - bazario-net
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
-      interval: 10s
-      retries: 5
-    restart: always
-
-  mysql-inventory:
-    image: mysql:8.0
-    container_name: mysql-inventory
-    environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: inventory_db
-    ports:
-      - "3308:3306"
-    volumes:
-      - mysql_inventory_data:/var/lib/mysql
-    networks:
-      - bazario-net
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
-      interval: 10s
-      retries: 5
-    restart: always
-
-  mysql-order:
-    image: mysql:8.0
-    container_name: mysql-order
-    environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: order_db
-    ports:
-      - "3309:3306"
-    volumes:
-      - mysql_orders_data:/var/lib/mysql
-    networks:
-      - bazario-net
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
-      interval: 10s
-      retries: 5
-    restart: always
-
-  mysql-auth:
-    image: mysql:8.0
-    container_name: mysql-auth
-    environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: auth_db
-    ports:
-      - "3310:3306"
-    volumes:
-      - mysql_auth_data:/var/lib/mysql
-    networks:
-      - bazario-net
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
-      interval: 10s
-      retries: 5
-    restart: always
-
-
-
-
   service-registry:
-    build: ./service-registry
+    image: iamahesan/service-registry:v2
     container_name: service-registry
     ports:
       - "8761:8761"
     networks:
       - bazario-net
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      test: [ "CMD", "curl", "-f", "http://localhost:8761/actuator/health" ]
       interval: 10s
       retries: 10
     restart: unless-stopped
 
   config-server:
-    build: ./config-server
+    image: iamahesan/config-server:v2
     container_name: config-server
     ports:
       - "8888:8888"
@@ -121,23 +39,18 @@ services:
       service-registry:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8888/actuator/health"]
+      test: [ "CMD", "curl", "-f", "http://localhost:8888/actuator/health" ]
       interval: 10s
       retries: 10
     restart: unless-stopped
 
-
-
-
   api-gateway:
-    build: ./api-gateway
+    image: iamahesan/api-gateway:v2
     container_name: api-gateway
     ports:
       - "8080:8080"
     networks:
       - bazario-net
-    env_file:
-      - ./api-gateway/.env
     environment:
       <<: *common-env
     depends_on:
@@ -147,17 +60,19 @@ services:
         condition: service_healthy
       zipkin:
         condition: service_healthy
+      logstash:
+        condition: service_started
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/actuator/health" ]
+      interval: 10s
+      retries: 10
     restart: unless-stopped
 
   auth-service:
-    build: ./auth-service
+    image: iamahesan/auth-service:v2
     container_name: auth-service
-    ports:
-      - "8083:8083"
     networks:
       - bazario-net
-    env_file:
-      - ./auth-service/.env
     environment:
       <<: *common-env
     depends_on:
@@ -165,21 +80,17 @@ services:
         condition: service_healthy
       config-server:
         condition: service_healthy
-      mysql-auth:
-        condition: service_healthy
       zipkin:
         condition: service_healthy
+      logstash:
+        condition: service_started
     restart: unless-stopped
 
   user-service:
-    build: ./user-service
+    image: iamahesan/user-service:v2
     container_name: user-service
-    ports:
-      - "8084:8084"
     networks:
       - bazario-net
-    env_file:
-      - ./user-service/.env
     environment:
       <<: *common-env
     depends_on:
@@ -187,21 +98,17 @@ services:
         condition: service_healthy
       config-server:
         condition: service_healthy
-      mysql-users:
-        condition: service_healthy
       zipkin:
         condition: service_healthy
+      logstash:
+        condition: service_started
     restart: unless-stopped
 
   inventory-service:
-    build: ./inventory-service
+    image: iamahesan/inventory-service:v2
     container_name: inventory-service
-    ports:
-      - "8081:8081"
     networks:
       - bazario-net
-    env_file:
-      - ./inventory-service/.env
     environment:
       <<: *common-env
     depends_on:
@@ -209,21 +116,17 @@ services:
         condition: service_healthy
       config-server:
         condition: service_healthy
-      mysql-inventory:
-        condition: service_healthy
       zipkin:
         condition: service_healthy
+      logstash:
+        condition: service_started
     restart: unless-stopped
 
   order-service:
-    build: ./order-service
+    image: iamahesan/order-service:v2
     container_name: order-service
-    ports:
-      - "8082:8082"
     networks:
       - bazario-net
-    env_file:
-      - ./order-service/.env
     environment:
       <<: *common-env
     depends_on:
@@ -231,17 +134,15 @@ services:
         condition: service_healthy
       config-server:
         condition: service_healthy
-      mysql-order:
-        condition: service_healthy
       zipkin:
         condition: service_healthy
+      logstash:
+        condition: service_started
     restart: unless-stopped
-
-
-
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.12.0
+    container_name: elasticsearch
     environment:
       discovery.type: single-node
       xpack.security.enabled: "false"
@@ -253,13 +154,14 @@ services:
     networks:
       - bazario-net
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9200"]
+      test: [ "CMD", "curl", "-f", "http://localhost:9200" ]
       interval: 10s
       retries: 5
     restart: unless-stopped
 
   kibana:
     image: docker.elastic.co/kibana/kibana:8.12.0
+    container_name: kibana
     environment:
       ELASTICSEARCH_HOSTS: '["http://elasticsearch:9200"]'
     ports:
@@ -273,6 +175,7 @@ services:
 
   logstash:
     image: docker.elastic.co/logstash/logstash:8.12.0
+    container_name: logstash
     ports:
       - "5044:5044"
     volumes:
@@ -286,12 +189,13 @@ services:
 
   zipkin:
     image: openzipkin/zipkin
+    container_name: zipkin
     ports:
       - "9411:9411"
     networks:
       - bazario-net
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:9411/health"]
+      test: [ "CMD", "wget", "-q", "--spider", "http://localhost:9411/health" ]
       interval: 10s
       retries: 5
     restart: unless-stopped
