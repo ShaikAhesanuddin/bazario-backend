@@ -73,7 +73,8 @@ jobs:
 
             echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
-            docker compose up -d --pull always --force-recreate --remove-orphans
+            docker compose pull
+            docker compose up -d --remove-orphans
 
             docker ps
 
@@ -109,7 +110,8 @@ jobs:
 
             echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
-            docker compose up -d --pull always --force-recreate --remove-orphans
+            docker compose pull
+            docker compose up -d --remove-orphans
 
             docker ps
 
