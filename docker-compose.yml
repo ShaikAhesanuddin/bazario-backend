@@ -10,24 +10,25 @@ x-common-env: &common-env
   SPRING_PROFILES_ACTIVE: prod
   CONFIG_SERVER_URL: http://config-server:8888
   EUREKA_URL: http://service-registry:8761/eureka
+  LOGSTASH_HOST: logstash
 
 services:
 
   service-registry:
-    image: iamahesan/service-registry:v2
+    image: iamahesan/service-registry:latest
     container_name: service-registry
     ports:
       - "8761:8761"
     networks:
       - bazario-net
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8761/actuator/health" ]
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
       interval: 10s
       retries: 10
     restart: unless-stopped
 
   config-server:
-    image: iamahesan/config-server:v2
+    image: iamahesan/config-server:latest
     container_name: config-server
     ports:
       - "8888:8888"
@@ -39,13 +40,13 @@ services:
       service-registry:
         condition: service_healthy
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8888/actuator/health" ]
+      test: ["CMD", "curl", "-f", "http://localhost:8888/actuator/health"]
       interval: 10s
       retries: 10
     restart: unless-stopped
 
   api-gateway:
-    image: iamahesan/api-gateway:v2
+    image: iamahesan/api-gateway:latest
     container_name: api-gateway
     ports:
       - "8080:8080"
@@ -61,15 +62,15 @@ services:
       zipkin:
         condition: service_healthy
       logstash:
-        condition: service_started
+        condition: service_healthy
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8080/actuator/health" ]
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
       interval: 10s
       retries: 10
     restart: unless-stopped
 
   auth-service:
-    image: iamahesan/auth-service:v2
+    image: iamahesan/auth-service:latest
     container_name: auth-service
     networks:
       - bazario-net
@@ -83,11 +84,11 @@ services:
       zipkin:
         condition: service_healthy
       logstash:
-        condition: service_started
+        condition: service_healthy
     restart: unless-stopped
 
   user-service:
-    image: iamahesan/user-service:v2
+    image: iamahesan/user-service:latest
     container_name: user-service
     networks:
       - bazario-net
@@ -101,11 +102,11 @@ services:
       zipkin:
         condition: service_healthy
       logstash:
-        condition: service_started
+        condition: service_healthy
     restart: unless-stopped
 
   inventory-service:
-    image: iamahesan/inventory-service:v2
+    image: iamahesan/inventory-service:latest
     container_name: inventory-service
     networks:
       - bazario-net
@@ -119,11 +120,11 @@ services:
       zipkin:
         condition: service_healthy
       logstash:
-        condition: service_started
+        condition: service_healthy
     restart: unless-stopped
 
   order-service:
-    image: iamahesan/order-service:v2
+    image: iamahesan/order-service:latest
     container_name: order-service
     networks:
       - bazario-net
@@ -137,7 +138,7 @@ services:
       zipkin:
         condition: service_healthy
       logstash:
-        condition: service_started
+        condition: service_healthy
     restart: unless-stopped
 
   elasticsearch:
@@ -154,9 +155,10 @@ services:
     networks:
       - bazario-net
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:9200" ]
+      test: [ "CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1" ]
       interval: 10s
-      retries: 5
+      retries: 10
+      start_period: 50s
     restart: unless-stopped
 
   kibana:
@@ -169,20 +171,28 @@ services:
     depends_on:
       elasticsearch:
         condition: service_healthy
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://localhost:5601/api/status || exit 1" ]
+      interval: 10s
+      retries: 10
+      start_period: 50s
     networks:
       - bazario-net
     restart: unless-stopped
 
   logstash:
-    image: iamahesan/logstash:v2
+    image: iamahesan/logstash:latest
     container_name: logstash
-    ports:
-      - "5044:5044"
+    networks:
+      - bazario-net
     depends_on:
       elasticsearch:
         condition: service_healthy
-    networks:
-      - bazario-net
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://localhost:9600 || exit 1" ]
+      interval: 10s
+      retries: 10
+      start_period: 50s
     restart: unless-stopped
 
   zipkin:
@@ -195,5 +205,6 @@ services:
     healthcheck:
       test: [ "CMD", "wget", "-q", "--spider", "http://localhost:9411/health" ]
       interval: 10s
-      retries: 5
+      retries: 10
+      start_period: 50s
     restart: unless-stopped
