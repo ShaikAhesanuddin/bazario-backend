@@ -28,7 +28,7 @@ jobs:
       - name: Build and push Docker images
         run: |
           docker buildx create --name builder --use || docker buildx use builder
-          VERSION=v6.0.0
+          VERSION=v6.0.1
 
           for service in api-gateway auth-service user-service inventory-service order-service config-server service-registry logstash
           do
